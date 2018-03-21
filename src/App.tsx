@@ -1,12 +1,14 @@
 import * as React from 'react'
+import { Dispatch } from 'redux'
+import { connect } from 'react-redux'
 
+import { State } from './modules'
+import { init, InitAction } from './modules/board'
 import { Piece } from './game/piece'
 import { Player } from './game/player'
 import { Board } from './game/board'
 import Coordinate from './game/coordinate'
 import { BoardView } from './components/Board'
-
-import './App.css'
 
 const cs = [
   new Coordinate({ x: 0, y: 0 }),
@@ -17,15 +19,33 @@ const cs = [
 
 const ps = cs.map(c => new Piece(c))
 
-const setup = {
+const initSetup = {
   player: new Player(ps),
-  b: new Board({ x: 5, y: 5 })
+  board: new Board({ x: 5, y: 5 })
 }
 
-class App extends React.Component {
+const mapStateToBoardProps = (state: State) => ({
+  b: state.board.setup!.board,
+  player: state.board.setup!.player
+})
+
+const ConnectedBoardView = connect(mapStateToBoardProps)(BoardView)
+
+const mapDispatchToProps = (dispatch: Dispatch<State>) => ({
+  init: (setup: { board: Board; player: Player }) => dispatch(init(setup))
+})
+
+interface AppDispatch {
+  init: (setup: { board: Board; player: Player }) => InitAction
+}
+
+class App extends React.Component<AppDispatch, {}> {
+  componentWillMount() {
+    this.props.init(initSetup)
+  }
   render() {
-    return <BoardView {...setup} />
+    return <ConnectedBoardView />
   }
 }
 
-export default App
+export default connect(undefined, mapDispatchToProps)(App)
