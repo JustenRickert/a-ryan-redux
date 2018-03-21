@@ -4,19 +4,16 @@ import { Board } from '../game/board'
 import Coordinate from '../game/coordinate'
 import { Maybe } from '../util/type'
 
-const MOVE = '@@board/emove'
-const PLACE = '@@board/place'
+const MOVE = '@@board/move'
 const REMOVE = '@@board/remove'
 const INIT = '@@board/init'
 
+export type MovementParam = { p: Piece; c: Coordinate }
+export type InitParam = { player: Player; board: Board }
+
 export interface MoveAction {
   type: typeof MOVE
-  payload: { p: Piece; c: Coordinate }
-}
-
-interface PlaceAction {
-  type: typeof PLACE
-  payload: { p: Piece; c: Coordinate }
+  payload: MovementParam
 }
 
 interface RemoveAction {
@@ -26,29 +23,18 @@ interface RemoveAction {
 
 export interface InitAction {
   type: typeof INIT
-  payload: { player: Player; board: Board }
+  payload: InitParam
 }
 
-export type Action = MoveAction | InitAction | PlaceAction | RemoveAction
+export type Action = InitAction | MoveAction | RemoveAction
 
-export const move = ({ p, c }: { p: Piece; c: Coordinate }): MoveAction => ({
-  type: MOVE,
-  payload: { p, c }
-})
-
-export const init = ({
-  player,
-  board
-}: {
-  player: Player
-  board: Board
-}): InitAction => ({
+export const init = ({ player, board }: InitParam): InitAction => ({
   type: INIT,
   payload: { player, board }
 })
 
-export const place = ({ p, c }: { p: Piece; c: Coordinate }): PlaceAction => ({
-  type: PLACE,
+export const move = ({ p, c }: MovementParam): MoveAction => ({
+  type: MOVE,
   payload: { p, c }
 })
 
@@ -72,23 +58,32 @@ const initState: BoardState = {
 
 export function reducer(state: BoardState = initState, action: Action) {
   if (!(action.type === INIT || /@@redux/.test(action.type)) && !state.setup) {
-    console.log(action)
     throw new Error('Need to setup the board first')
   }
   if (action.type === INIT && state.setup) {
     throw new Error("Don't initialize the board twice")
   }
 
+  // TODO These should totally be pure functions. At some point, replace these
+  // underlying data structures with immutable-js structures or similar.
+  // Immutable in particular has O(log_32 n) accessor functions
   switch (action.type) {
-    // case MOVE:
-    // case REMOVE:
-    // case PLACE:
-    //   const { board } = state.setup
-    //   return
-    case INIT:
+    case REMOVE: {
+      const player = state.setup!.player
+      const index = player.ps.indexOf(action.payload)
+      delete player.ps[index]
+      return { ...state, setup: { ...state.setup, player } }
+    }
+    case MOVE: {
+      action.payload.p.c = action.payload.c
+      return state
+    }
+    case INIT: {
       const { player, board } = action.payload
       return { ...state, setup: { player, board } }
-    default:
+    }
+    default: {
       return state
+    }
   }
 }

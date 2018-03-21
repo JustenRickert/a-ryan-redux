@@ -10,6 +10,8 @@ import { Board } from './game/board'
 import Coordinate from './game/coordinate'
 import { BoardView } from './components/Board'
 
+// SETUP
+
 const cs = [
   new Coordinate({ x: 0, y: 0 }),
   new Coordinate({ x: 0, y: 1 }),
@@ -24,6 +26,8 @@ const initSetup = {
   board: new Board({ x: 5, y: 5 })
 }
 
+// BOARD VIEW
+
 const mapStateToBoardProps = (state: State) => ({
   b: state.board.setup!.board,
   player: state.board.setup!.player
@@ -31,13 +35,15 @@ const mapStateToBoardProps = (state: State) => ({
 
 const ConnectedBoardView = connect(mapStateToBoardProps)(BoardView)
 
-const mapDispatchToProps = (dispatch: Dispatch<State>) => ({
-  init: (setup: { board: Board; player: Player }) => dispatch(init(setup))
-})
+// APP
 
 interface AppDispatch {
   init: (setup: { board: Board; player: Player }) => InitAction
 }
+
+const mapDispatchToProps = (dispatch: Dispatch<State>) => ({
+  init: (setup: { board: Board; player: Player }) => dispatch(init(setup))
+})
 
 class App extends React.Component<AppDispatch, {}> {
   componentWillMount() {
