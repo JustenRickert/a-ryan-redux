@@ -1,3 +1,5 @@
+import { Map } from 'immutable'
+
 import Coordinate from './coordinate'
 import { Piece } from './piece'
 
@@ -26,11 +28,13 @@ export class Board {
     this.size = size
   }
 
-  placeMap = (ps: Piece[]) => {
+  placeMap = (ps: Map<Coordinate, Piece>) => {
     const normalizedPlaces = new Array<undefined | Piece>(
       this.totalPlaces
     ).fill(undefined)
-    ps.forEach(p => (normalizedPlaces[this.coordinateToNumber(p.c)] = p))
+    ps.forEach(
+      (p, c) => !c || (normalizedPlaces[this.coordinateToNumber(c)] = p)
+    )
     return normalizedPlaces
   }
 

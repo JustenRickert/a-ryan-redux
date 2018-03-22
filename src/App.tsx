@@ -19,7 +19,7 @@ const cs = [
   new Coordinate({ x: 1, y: 1 })
 ]
 
-const ps = cs.map(c => new Piece(c))
+const ps = cs.map(c => ({ c, p: new Piece() }))
 
 const initSetup = {
   player: new Player(ps),
