@@ -1,9 +1,17 @@
 import * as React from 'react'
 import { Dispatch } from 'redux'
 import { connect } from 'react-redux'
+import { sample } from 'lodash'
 
 import { State } from './modules'
-import { init, InitAction } from './modules/board'
+import {
+  Match,
+  init,
+  InitAction,
+  move,
+  MoveAction,
+  MovementParam
+} from './modules/match'
 import { Piece } from './game/piece'
 import { Player } from './game/player'
 import { Board } from './game/board'
@@ -21,37 +29,58 @@ const cs = [
 
 const ps = cs.map(c => ({ c, p: new Piece() }))
 
-const initSetup = {
+const initMatch = {
   player: new Player(ps),
   board: new Board({ x: 5, y: 5 })
 }
 
-// BOARD VIEW
-
-const mapStateToBoardProps = (state: State) => ({
-  b: state.board.setup!.board,
-  player: state.board.setup!.player
-})
-
-const ConnectedBoardView = connect(mapStateToBoardProps)(BoardView)
-
 // APP
 
-interface AppDispatch {
-  init: (setup: { board: Board; player: Player }) => InitAction
+interface AppProps {
+  match: Match
 }
 
-const mapDispatchToProps = (dispatch: Dispatch<State>) => ({
-  init: (setup: { board: Board; player: Player }) => dispatch(init(setup))
+interface AppDispatch {
+  init: (match: { board: Board; player: Player }) => InitAction
+  move: ({ p, c, oc }: MovementParam) => MoveAction
+}
+
+const mapStateToProps = (state: State) => ({
+  match: state.match.value
 })
 
-class App extends React.Component<AppDispatch, {}> {
+const mapDispatchToProps = (dispatch: Dispatch<State>) => ({
+  init: (match: { board: Board; player: Player }) => dispatch(init(match)),
+  move: (arg: MovementParam) => dispatch(move(arg))
+})
+
+interface AppState {
+  isRun: boolean
+}
+
+class App extends React.Component<AppProps & AppDispatch, AppState> {
+  state = { isRun: false }
   componentWillMount() {
-    this.props.init(initSetup)
+    sample([1, 2, 3])
+    this.props.init(initMatch)
+  }
+  componentDidUpdate() {
+    if (!this.state.isRun) {
+      const { player } = this.props.match
+      const { p, c } = sample(
+        player.ps.map((p, c) => ({ p: p!, c: c! })).toArray()
+      )!
+      this.props.move({ p, c, oc: { x: 3, y: 3 } })
+      this.setState({ isRun: true })
+    }
   }
   render() {
-    return <ConnectedBoardView />
+    if (!this.props.match) {
+      return null
+    }
+    const { ...rest } = this.props.match
+    return <BoardView {...rest} />
   }
 }
 
-export default connect(undefined, mapDispatchToProps)(App)
+export default connect(mapStateToProps, mapDispatchToProps)(App)

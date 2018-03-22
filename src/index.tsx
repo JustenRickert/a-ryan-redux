@@ -1,6 +1,7 @@
 import * as React from 'react'
 import * as ReactDOM from 'react-dom'
 import { createStore } from 'redux'
+import { composeWithDevTools } from 'redux-devtools-extension'
 import { Provider } from 'react-redux'
 
 import reducers from './modules'
@@ -8,7 +9,7 @@ import reducers from './modules'
 import App from './App'
 import registerServiceWorker from './registerServiceWorker'
 
-export const store = createStore(reducers)
+export const store = createStore(reducers, composeWithDevTools({})())
 
 ReactDOM.render(
   <Provider store={store}>

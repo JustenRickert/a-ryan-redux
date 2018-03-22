@@ -1,16 +1,11 @@
 import { combineReducers } from 'redux'
 
-import test, { TestState, reducer as testReducer } from './test'
-import { BoardState, reducer as boardReducer } from './board'
+import { MatchState, reducer as matchReducer } from './match'
 
 export interface State {
-  board: BoardState
-  test: TestState
-  altTest: TestState
+  match: MatchState
 }
 
 export default combineReducers<State>({
-  test,
-  altTest: testReducer,
-  board: boardReducer
+  match: matchReducer
 })

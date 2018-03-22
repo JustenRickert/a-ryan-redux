@@ -4,12 +4,17 @@ import { Board } from '../game/board'
 import Coordinate from '../game/coordinate'
 import { Maybe } from '../util/type'
 
-const MOVE = '@@board/move'
-const REMOVE = '@@board/remove'
-const INIT = '@@board/init'
+const MOVE = '@@match/move'
+const REMOVE = '@@match/remove'
+const INIT = '@@match/init'
+
+export interface Match {
+  player: Player
+  board: Board
+}
 
 export type MovementParam = { p: Piece; c: Coordinate; oc: Coordinate }
-export type InitParam = { player: Player; board: Board }
+export type InitParam = Match
 
 export interface MoveAction {
   type: typeof MOVE
@@ -43,54 +48,50 @@ export const remove = ({ c }: { c: Coordinate }): RemoveAction => ({
   payload: c
 })
 
-export interface BoardState {
-  isInitialized: boolean
-  setup: Maybe<{
-    player: Player
-    board: Board
-  }>
+export interface MatchState {
+  value: Maybe<Match>
 }
 
-const initState: BoardState = {
-  isInitialized: false,
-  setup: undefined
+const initState: MatchState = {
+  value: undefined
 }
 
 export function reducer(
-  state: BoardState = initState,
+  state: MatchState = initState,
   action: Action
-): BoardState {
-  if (!(action.type === INIT || /@@redux/.test(action.type)) && !state.setup) {
+): MatchState {
+  // All non-init actions throw if match is not initialized
+  if (
+    !(action.type === INIT || /@@redux|@@INIT/.test(action.type)) &&
+    !state.value
+  ) {
+    console.log(action, INIT)
     throw new Error('Need to setup the board first')
   }
-  if (action.type === INIT && state.setup) {
+  // Initializing the board again would reset the game.
+  if (action.type === INIT && state.value) {
     throw new Error("Don't initialize the board twice")
   }
 
   switch (action.type) {
-    case REMOVE: {
-      const c = action.payload
-      const { player } = state.setup!
-      player.ps = player.ps.remove(c)
-      return { ...state, setup: { ...state.setup!, player } }
+    case INIT: {
+      const { player, board } = action.payload
+      return { ...state, value: { player, board } }
     }
     case MOVE: {
       const { oc, c, p } = action.payload
-      const { player } = state.setup!
-      player.ps = player.ps.set(c, p)
-      const newState: BoardState = {
+      const { player } = state.value!
+      player.ps = player.ps.set(oc, p).remove(c)
+      return {
         ...state,
-        setup: { ...state.setup!, player }
+        value: { ...state.value!, player }
       }
-      const stateAfterOldCRemoval = reducer(newState, <RemoveAction>{
-        type: REMOVE,
-        payload: oc
-      })
-      return stateAfterOldCRemoval
     }
-    case INIT: {
-      const { player, board } = action.payload
-      return { ...state, setup: { player, board } }
+    case REMOVE: {
+      const c = action.payload
+      const { player } = state.value!
+      player.ps = player.ps.remove(c)
+      return { ...state, value: { ...state.value!, player } }
     }
     default: {
       return state

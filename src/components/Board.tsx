@@ -1,9 +1,8 @@
 import * as React from 'react'
 
+import { Match } from '../modules/match'
 import Coordinate from '../game/coordinate'
-import { Player } from '../game/player'
 import { Piece } from '../game/piece'
-import { Board } from '../game/board'
 import {
   Grid,
   Piece as PieceDiv,
@@ -14,14 +13,15 @@ import {
 const isBlackSquare = (index: Coordinate) =>
   Boolean(index.x % 2 || index.y % 2) && !(index.x % 2 && index.y % 2)
 
-export const BoardView = ({ b, player }: { b: Board; player: Player }) => {
-  const places = b.placeMap(player.ps)
-  const BoardGrid = Grid(b)
+export const BoardView = ({ board, player }: Match) => {
+  const places = board.placeMap(player.ps)
+  console.log(places)
+  const BoardGrid = Grid(board)
   return (
     <BoardGrid>
       {places.map((place, index) => (
         <PlaceView
-          isBlackSquare={isBlackSquare(b.numberToCoordinate(index))}
+          isBlackSquare={isBlackSquare(board.numberToCoordinate(index))}
           key={index}
           p={place}
         />
